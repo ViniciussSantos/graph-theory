@@ -1,7 +1,9 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+bool hasCycle = false;
 typedef int Vertex;
 typedef struct {
   int u;
@@ -152,8 +154,11 @@ void dfs(Graph G, Vertex v, int color, Vertex pred, Vertex *cycle,
   if (G->adj[v] == NULL)
     return;
 
+  // TODO: fazer com que vertices de grau 1 nao sejam inseridos no ciclo
   if (G->adj[v]->color != -1) {
     if (G->adj[v]->color != color) {
+
+      hasCycle = true;
 
       // ciclo impar
       printf("GUERRA!\n");
@@ -162,10 +167,11 @@ void dfs(Graph G, Vertex v, int color, Vertex pred, Vertex *cycle,
       // no exemplo do enunciado, existem 2 ciclos impares, mas o meu algoritmo
       // imprime o maior
       for (int i = 0; i < *cycle_length; i++) {
-        printf("%d%s", cycle[i], i == *cycle_length - 1 ? "\n" : " ");
+        printf("%d ", cycle[i]);
       }
+      printf("%d\n", v);
 
-      exit(1);
+      return;
     }
     return;
   }
@@ -183,6 +189,9 @@ void dfs(Graph G, Vertex v, int color, Vertex pred, Vertex *cycle,
       p = p->next;
       continue;
     }
+
+    if (hasCycle)
+      return;
 
     dfs(G, p->w, color == 0 ? 1 : 0, v, cycle, cycle_length);
     p = p->next;
@@ -209,6 +218,9 @@ int main(int argc, char const *argv[]) {
 
   // colorir o grafo começando pelo vertice 0 com a cor azul
   dfs(G, 0, 0, -1, cycle, &cycle_length);
+
+  if (hasCycle)
+    return 0;
 
   printf("PAZ!\n");
 
