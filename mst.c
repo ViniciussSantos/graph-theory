@@ -11,9 +11,6 @@ typedef struct {
 typedef struct graph *Graph;
 typedef struct node *link;
 
-/* Função auxiliar para sort_edges()
- * Recebe edges[ini..mid] e edges[mid+1..end] já ordenados e faz com que
- * edges[ini..end] fique totalmente ordenado */
 void merge_edges(WEdge *edges, int ini, int mid, int end) {
   WEdge *A = malloc((mid - ini + 1) * sizeof(*A));
   WEdge *B = malloc((end - mid) * sizeof(*B));
@@ -43,9 +40,6 @@ void merge_edges(WEdge *edges, int ini, int mid, int end) {
   free(B);
 }
 
-/* Implementação do MergeSort para ordenar um vetor de arestas com pesos.
- * Vai ordenar o vetor edges[ini..end] (portanto o primeiro e último índices
- * devem ser elementos válidos) */
 void sort_edges(WEdge *edges, int ini, int end) {
   if (ini < end) {
     int mid = (ini + end) / 2;
@@ -136,19 +130,61 @@ WEdge wedge(Vertex u, Vertex v, double weight) {
   return e;
 }
 
+// union-find
+int find_set(int *parent, int i) {
+  if (parent[i] == i)
+    return i;
+  else
+    return find_set(parent, parent[i]);
+}
+
+void union_sets(int *parent, int i, int j) {
+  int set_i = find_set(parent, i);
+  int set_j = find_set(parent, j);
+  parent[set_i] = set_j;
+}
+
+void kruskal(Graph G, WEdge *edges) {
+  int *parent = malloc(G->V * sizeof(int));
+  for (int i = 0; i < G->V; i++)
+    parent[i] = i;
+
+  sort_edges(edges, 0, G->E - 1);
+
+  double total_weight = 0.0;
+
+  for (int i = 0; i < G->E; i++) {
+    Vertex u = edges[i].u;
+    Vertex v = edges[i].v;
+    double weight = edges[i].weight;
+
+    if (find_set(parent, u) != find_set(parent, v)) {
+      printf("%d %d\n", u, v);
+      total_weight += weight;
+      union_sets(parent, u, v);
+    }
+  }
+  printf("%.2lf\n", total_weight);
+  free(parent);
+}
+
 int main(int argc, char const *argv[]) {
 
   int V, E;
   scanf("%d %d", &V, &E);
 
   Graph G = graph(V);
+  WEdge *edges = malloc(E * sizeof(WEdge));
 
   for (int i = 0; i < E; i++) {
     Vertex u, v;
     double w;
     scanf("%d %d %lf", &u, &v, &w);
     graph_insert_edge(G, wedge(u, v, w));
+    edges[i] = wedge(u, v, w);
   }
+
+  kruskal(G, edges);
 
   return 0;
 }
